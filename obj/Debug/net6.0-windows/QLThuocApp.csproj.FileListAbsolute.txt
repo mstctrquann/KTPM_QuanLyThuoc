@@ -1,0 +1,5 @@
+c:\Users\PC\Downloads\KTPM-master\obj\Debug\net6.0-windows\QLThuocApp.csproj.AssemblyReference.cache
+c:\Users\PC\Downloads\KTPM-master\obj\Debug\net6.0-windows\QLThuocApp.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\PC\Downloads\KTPM-master\obj\Debug\net6.0-windows\QLThuocApp.AssemblyInfoInputs.cache
+c:\Users\PC\Downloads\KTPM-master\obj\Debug\net6.0-windows\QLThuocApp.AssemblyInfo.cs
+c:\Users\PC\Downloads\KTPM-master\obj\Debug\net6.0-windows\QLThuocApp.csproj.CoreCompileInputs.cache
