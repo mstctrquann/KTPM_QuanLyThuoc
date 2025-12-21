@@ -92,6 +92,29 @@ namespace QLThuocApp.UI
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.Click += (s, e) => LoadData();
             panelTop.Controls.Add(btnRefresh);
+
+            // Nút Báo Cáo - Chỉ hiển thị cho Admin và Manager
+            var roleId = LoginForm.CurrentUser?.IdVT;
+            if (roleId == "1" || roleId == "2") // Admin hoặc Manager
+            {
+                var btnReport = new Button 
+                { 
+                    Text = "📊 Báo Cáo Doanh Thu", 
+                    Location = new Point(320, 10),
+                    Size = new Size(180, 40),
+                    BackColor = Color.FromArgb(155, 89, 182),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    Cursor = Cursors.Hand
+                };
+                btnReport.FlatAppearance.BorderSize = 0;
+                btnReport.Click += (s, e) => { 
+                    var revenueForm = new RevenueReportForm();
+                    revenueForm.ShowDialog();
+                };
+                panelTop.Controls.Add(btnReport);
+            }
             
             Controls.Add(panelTop);
 

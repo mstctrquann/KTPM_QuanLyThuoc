@@ -52,9 +52,9 @@
               "target": "Package",
               "version": "[2.0.0, )"
             },
-            "System.Windows.Forms.DataVisualization": {
+            "ScottPlot.WinForms": {
               "target": "Package",
-              "version": "[1.0.0-prerelease.20110.1, )"
+              "version": "[5.0.53, )"
             }
           },
           "imports": [

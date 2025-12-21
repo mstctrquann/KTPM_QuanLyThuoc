@@ -16,11 +16,10 @@ namespace QLThuocApp.UI
             AddTab(tab, "Thuốc", new TrashThuocPanel());
             AddTab(tab, "Nhân Viên", new TrashNhanVienPanel());
             AddTab(tab, "Khách Hàng", new TrashKhachHangPanel());
-            AddTab(tab, "Nhà Cung Cấp", new TrashNhaCungCapPanel()); // Bổ sung
+            AddTab(tab, "Nhà Cung Cấp", new TrashNhaCungCapPanel());
             AddTab(tab, "Hóa Đơn", new TrashHoaDonPanel());
-            AddTab(tab, "Phiếu Nhập", new TrashPhieuNhapPanel());
-            AddTab(tab, "Hợp Đồng", new TrashHopDongPanel());         // Bổ sung
-            AddTab(tab, "Phản Hồi", new TrashPhanHoiPanel());         // Bổ sung
+            AddTab(tab, "Hợp Đồng", new TrashHopDongPanel());
+            AddTab(tab, "Phản Hồi", new TrashPhanHoiPanel());
 
             Controls.Add(tab);
         }

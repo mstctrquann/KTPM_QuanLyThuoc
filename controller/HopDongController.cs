@@ -19,6 +19,11 @@ namespace QLThuocApp.Controllers
             return hopDongDAO.GetAllHopDong();
         }
 
+        public HopDong? GetHopDongById(string idHD)
+        {
+            return hopDongDAO.GetHopDongById(idHD);
+        }
+
         public List<HopDong> SearchHopDong(string id, string nv, string ncc)
         {
             return hopDongDAO.SearchHopDong(id, nv, ncc);

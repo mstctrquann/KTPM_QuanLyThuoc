@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using QLThuocApp.Controllers;
 using QLThuocApp.Entities;
@@ -93,7 +94,7 @@ namespace QLThuocApp.UI
             btnGuest.Location = new Point(120, 200);
             btnGuest.Size = new Size(200, 30);
             btnGuest.TabIndex = 4;
-            btnGuest.Click += (s, e) => { new GuestFeedbackForm().ShowDialog(); };
+            btnGuest.Click += BtnGuest_Click;
             this.Controls.Add(btnGuest);
 
             // Register Employee Button
@@ -110,7 +111,90 @@ namespace QLThuocApp.UI
             btnRegister.FlatAppearance.BorderSize = 0;
             this.Controls.Add(btnRegister);
 
-            this.AcceptButton = btnLogin; // Enter key triggers login
+            this.AcceptButton = btnLogin; 
+        }
+
+        private void BtnGuest_Click(object? sender, EventArgs e)
+        {
+            // Tạo form để hiển thị QR code
+            Form qrForm = new Form
+            {
+                Text = "Phản hồi của khách hàng",
+                ClientSize = new Size(500, 600),
+                StartPosition = FormStartPosition.CenterScreen,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = Color.White
+            };
+
+            // Tiêu đề
+            Label lblTitle = new Label
+            {
+                Text = "Quét mã QR để gửi phản hồi",
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(100, 20),
+                ForeColor = Color.FromArgb(52, 152, 219)
+            };
+            qrForm.Controls.Add(lblTitle);
+
+            // PictureBox cho QR code
+            PictureBox picQR = new PictureBox
+            {
+                Size = new Size(400, 400),
+                Location = new Point(50, 70),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            // Load ảnh QR từ Resources
+            string qrPath = @"C:\Users\PC\Downloads\KTPM-master\Resources\qr_feedback.jpg";
+            
+            // Nếu không tìm thấy ở đường dẫn tuyệt đối, thử đường dẫn tương đối
+            if (!File.Exists(qrPath))
+            {
+                qrPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "qr_feedback.jpg");
+            }
+
+            if (File.Exists(qrPath))
+            {
+                picQR.Image = Image.FromFile(qrPath);
+            }
+            else
+            {
+                // Nếu không tìm thấy file, tạo label thông báo
+                Label lblError = new Label
+                {
+                    Text = "Vui lòng đặt file 'qr_feedback.jpg' vào thư mục Resources",
+                    AutoSize = false,
+                    Size = new Size(380, 60),
+                    Location = new Point(60, 220),
+                    Font = new Font("Segoe UI", 11F),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    ForeColor = Color.Red
+                };
+                picQR.Controls.Add(lblError);
+            }
+            qrForm.Controls.Add(picQR);
+
+            // Nút đóng
+            Button btnClose = new Button
+            {
+                Text = "Đóng",
+                Size = new Size(100, 35),
+                Location = new Point(200, 490),
+                BackColor = Color.FromArgb(149, 165, 166),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.Click += (s, ev) => qrForm.Close();
+            qrForm.Controls.Add(btnClose);
+
+            qrForm.ShowDialog();
         }
 
         private void BtnRegister_Click(object? sender, EventArgs e)
@@ -127,17 +211,33 @@ namespace QLThuocApp.UI
 
         private void BtnLogin_Click(object? sender, EventArgs e)
         {
-            var tk = controller.Login(txtUser.Text.Trim(), txtPass.Text.Trim());
-            if (tk != null)
+            try
             {
-                CurrentUser = tk; // Lưu session
-                this.Hide();
-                new MainForm().ShowDialog();
-                this.Close();
+                var tk = controller.Login(txtUser.Text.Trim(), txtPass.Text.Trim());
+                if (tk != null)
+                {
+                    CurrentUser = tk; // Lưu session
+                    this.Hide();
+                    var mainForm = new MainForm();
+                    mainForm.ShowDialog();
+                    // Sau khi MainForm đóng, hiện lại LoginForm và xóa mật khẩu
+                    txtPass.Text = "";
+                    this.Show();
+                }
+                else
+                {
+                    MessageBox.Show("Sai tên đăng nhập hoặc mật khẩu!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            catch (MySql.Data.MySqlClient.MySqlException ex)
             {
-                MessageBox.Show("Sai tên đăng nhập hoặc mật khẩu!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Lỗi database:\n{ex.Message}\n\nMã lỗi: {ex.Number}\n\nChi tiết:\n{ex.StackTrace}", 
+                    "Lỗi Database", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi hệ thống:\n{ex.Message}\n\nChi tiết:\n{ex.StackTrace}", 
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

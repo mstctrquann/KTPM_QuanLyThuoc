@@ -9,7 +9,7 @@ namespace QLThuocApp.UI
     public class NhaCungCapPanel : UserControl
     {
         private DataGridView dgv;
-        private Button btnAdd, btnRefresh;
+        private Button btnRefresh;
         private NhaCungCapController controller = new NhaCungCapController();
         
         public NhaCungCapPanel()
@@ -26,25 +26,10 @@ namespace QLThuocApp.UI
             // Panel top với buttons
             var pnlTop = new Panel { Dock = DockStyle.Top, Height = 60, BackColor = Color.WhiteSmoke, Padding = new Padding(5) };
             
-            btnAdd = new Button 
-            { 
-                Text = "➕ Thêm Nhà Cung Cấp", 
-                Location = new Point(10, 12), 
-                Size = new Size(150, 36), 
-                BackColor = Color.FromArgb(46, 204, 113), 
-                ForeColor = Color.White, 
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            btnAdd.FlatAppearance.BorderSize = 0;
-            btnAdd.Click += BtnAdd_Click;
-            pnlTop.Controls.Add(btnAdd);
-
             btnRefresh = new Button 
             { 
                 Text = "🔄", 
-                Location = new Point(170, 12), 
+                Location = new Point(10, 12), 
                 Size = new Size(60, 36), 
                 BackColor = Color.FromArgb(149, 165, 166), 
                 ForeColor = Color.White, 
@@ -99,12 +84,6 @@ namespace QLThuocApp.UI
 
             Controls.Add(pnlTop);
             LoadData();
-        }
-
-        private void BtnAdd_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Chức năng thêm nhà cung cấp sẽ được phát triển trong phiên bản tiếp theo!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            // TODO: Tạo AddNhaCungCapDialog sau
         }
 
         private void LoadData() => dgv.DataSource = controller.GetAllNhaCungCap();

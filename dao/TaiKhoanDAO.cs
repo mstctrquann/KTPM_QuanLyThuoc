@@ -11,10 +11,12 @@ namespace QLThuocApp.dao
         public TaiKhoan GetByUsername(string username)
         {
             // Join với NhanVien để lấy Mã Nhân Viên (thay vì ID int)
-            string sql = @"SELECT tk.*, nv.ma_nhan_vien 
-                           FROM taikhoan tk
-                           LEFT JOIN nhanvien nv ON tk.nhan_vien_id = nv.id
-                           WHERE tk.username = @u";
+            string sql = @"SELECT tk.id, tk.username, tk.password, tk.nhan_vien_id, 
+                   tk.role_id, 
+                   nv.ma_nhan_vien
+                   FROM taikhoan tk
+                   LEFT JOIN nhanvien nv ON tk.nhan_vien_id = nv.id AND nv.is_deleted = 0
+                   WHERE tk.username = @u";
 
             using (var conn = DBConnection.GetConnection())
             {
@@ -26,14 +28,22 @@ namespace QLThuocApp.dao
                     {
                         if (reader.Read())
                         {
+                            // Lấy role_id
+                            string roleId = reader["role_id"] != DBNull.Value ? reader["role_id"].ToString() ?? "" : "";
+                            
+                            // Chuẩn hóa quyền: manager (role_id=2) cũng được coi là admin
+                            if (roleId == "2")
+                            {
+                                roleId = "1";
+                            }
+                            
                             return new TaiKhoan
                             {
-                                // Entity TaiKhoan của bạn có thể cần cập nhật để có IdTK (string) thay vì int
-                                // IdTK = reader["id"].ToString(), 
+                                IdTK = reader["id"].ToString() ?? "", 
                                 Username = reader["username"].ToString() ?? "",
                                 Password = reader["password"].ToString() ?? "",
                                 IdNV = reader["ma_nhan_vien"] != DBNull.Value ? reader["ma_nhan_vien"].ToString() ?? "" : "",
-                                IdVT = reader["role_id"] != DBNull.Value ? reader["role_id"].ToString() ?? "" : ""
+                                IdVT = roleId
                             };
                         }
                     }

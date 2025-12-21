@@ -19,14 +19,14 @@ namespace QLThuocApp.dao
                 NamSinh = reader["nam_sinh"] != DBNull.Value ? Convert.ToInt32(reader["nam_sinh"]) : 0,
                 NgayVaoLam = Convert.ToDateTime(reader["ngay_vao_lam"]),
                 Luong = reader["luong"] != DBNull.Value ? reader["luong"].ToString() : "0",
-                TrangThai = reader["trang_thai"].ToString()
+                TrangThai = reader["trang_thai"].ToString(),
+                RoleId = "" // RoleId chỉ có khi JOIN với taikhoan, mặc định rỗng
             };
         }
 
         public List<NhanVien> GetAll()
         {
             List<NhanVien> list = new List<NhanVien>();
-            // Only get active employees (not deleted)
             string sql = "SELECT * FROM nhanvien WHERE is_deleted = 0 OR is_deleted IS NULL";
             using (MySqlConnection conn = DBConnection.GetConnection())
             {
@@ -164,18 +164,40 @@ namespace QLThuocApp.dao
 
         public bool Delete(string idNV)
         {
-            // Soft delete: set is_deleted = 1 instead of actual deletion
-            string sql = "UPDATE nhanvien SET is_deleted = 1 WHERE ma_nhan_vien = @ma";
-            using (MySqlConnection conn = DBConnection.GetConnection())
+        // Soft delete: set is_deleted = 1 for both nhanvien and related taikhoan
+        using (MySqlConnection conn = DBConnection.GetConnection())
+        {
+            conn.Open();
+            using (MySqlTransaction transaction = conn.BeginTransaction())
             {
-                conn.Open();
-                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@ma", idNV);
-                    return cmd.ExecuteNonQuery() > 0;
+                    // Delete taikhoan permanently (bảng taikhoan không có is_deleted)
+                    string sqlAccount = "DELETE FROM taikhoan WHERE nhan_vien_id = (SELECT id FROM nhanvien WHERE ma_nhan_vien = @ma)";
+                    using (MySqlCommand cmdAccount = new MySqlCommand(sqlAccount, conn, transaction))
+                    {
+                        cmdAccount.Parameters.AddWithValue("@ma", idNV);
+                        cmdAccount.ExecuteNonQuery();
+                    }
+
+                    // Then soft delete nhanvien
+                    string sql = "UPDATE nhanvien SET is_deleted = 1 WHERE ma_nhan_vien = @ma";
+                    using (MySqlCommand cmd = new MySqlCommand(sql, conn, transaction))
+                    {
+                        cmd.Parameters.AddWithValue("@ma", idNV);
+                        int result = cmd.ExecuteNonQuery();
+                        transaction.Commit();
+                        return result > 0;
+                    }
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
             }
         }
+    }
 
         public List<NhanVien> GetDeleted()
         {
@@ -196,30 +218,70 @@ namespace QLThuocApp.dao
 
         public bool Restore(string id)
         {
-            // Restore from trash: set is_deleted = 0
-            string sql = "UPDATE nhanvien SET is_deleted = 0 WHERE ma_nhan_vien = @ma";
-            using (MySqlConnection conn = DBConnection.GetConnection())
+        // Restore from trash: set is_deleted = 0 for both nhanvien and related taikhoan
+        using (MySqlConnection conn = DBConnection.GetConnection())
+        {
+            conn.Open();
+            using (MySqlTransaction transaction = conn.BeginTransaction())
             {
-                conn.Open();
-                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                try
                 {
-                    cmd.Parameters.AddWithValue("@ma", id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    // Restore nhanvien first
+                    string sql = "UPDATE nhanvien SET is_deleted = 0 WHERE ma_nhan_vien = @ma";
+                    using (MySqlCommand cmd = new MySqlCommand(sql, conn, transaction))
+                    {
+                        cmd.Parameters.AddWithValue("@ma", id);
+                        int result = cmd.ExecuteNonQuery();
+                        
+                        // Note: Cannot restore taikhoan as it was permanently deleted
+                        // Admin needs to create new account if needed
+                        
+                        transaction.Commit();
+                        return result > 0;
+                    }
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
             }
         }
+    }
 
         public bool DeleteForever(string id)
         {
-            // Permanent delete: actually remove from database
-            string sql = "DELETE FROM nhanvien WHERE ma_nhan_vien = @ma";
+            // Permanent delete: actually remove from database (taikhoan first, then nhanvien)
             using (MySqlConnection conn = DBConnection.GetConnection())
             {
                 conn.Open();
-                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                using (MySqlTransaction transaction = conn.BeginTransaction())
                 {
-                    cmd.Parameters.AddWithValue("@ma", id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    try
+                    {
+                        // Delete related taikhoan first to avoid foreign key issues
+                        string sqlAccount = "DELETE FROM taikhoan WHERE nhan_vien_id = (SELECT id FROM nhanvien WHERE ma_nhan_vien = @ma)";
+                        using (MySqlCommand cmdAccount = new MySqlCommand(sqlAccount, conn, transaction))
+                        {
+                            cmdAccount.Parameters.AddWithValue("@ma", id);
+                            cmdAccount.ExecuteNonQuery();
+                        }
+
+                        // Then delete nhanvien
+                        string sql = "DELETE FROM nhanvien WHERE ma_nhan_vien = @ma";
+                        using (MySqlCommand cmd = new MySqlCommand(sql, conn, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@ma", id);
+                            int result = cmd.ExecuteNonQuery();
+                            transaction.Commit();
+                            return result > 0;
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
             }
         }

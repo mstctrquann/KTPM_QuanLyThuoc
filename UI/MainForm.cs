@@ -40,10 +40,36 @@ namespace QLThuocApp.UI
             var itemHeThong = new ToolStripMenuItem("⚙ Hệ thống");
             itemHeThong.ForeColor = Color.White;
             itemHeThong.DropDownItems.Add("↪ Đăng xuất", null, (s, e) => {
-                this.Hide(); new LoginForm().Show();
+                LoginForm.CurrentUser = null; // Xóa session
+                this.Close(); // Đóng MainForm, tự động quay về LoginForm
             });
             itemHeThong.DropDownItems.Add("✖ Thoát", null, (s, e) => Application.Exit());
             menu.Items.Add(itemHeThong);
+
+            // Menu Báo Cáo - Chỉ cho Admin và Manager
+            var roleId = LoginForm.CurrentUser?.IdVT;
+            if (roleId == "1" || roleId == "2") // Admin hoặc Manager
+            {
+                var itemBaoCao = new ToolStripMenuItem("📊 Báo Cáo");
+                itemBaoCao.ForeColor = Color.White;
+                
+                // Báo cáo doanh thu
+                var itemRevenue = new ToolStripMenuItem("💰 Báo Cáo Doanh Thu", null, (s, e) => {
+                    var revenueForm = new RevenueReportForm();
+                    revenueForm.ShowDialog();
+                });
+                itemBaoCao.DropDownItems.Add(itemRevenue);
+                
+                // Báo cáo đánh giá
+                var itemFeedback = new ToolStripMenuItem("⭐ Báo Cáo Đánh Giá", null, (s, e) => {
+                    var feedbackForm = new FeedbackReportForm();
+                    feedbackForm.ShowDialog();
+                });
+                itemBaoCao.DropDownItems.Add(itemFeedback);
+                
+                menu.Items.Add(itemBaoCao);
+            }
+
             this.MainMenuStrip = menu;
             Controls.Add(menu);
 
@@ -78,7 +104,6 @@ namespace QLThuocApp.UI
                 AddTab("Bán Hàng", new HoaDonPanel());
                 AddTab("Thuốc", new ThuocControl());
                 AddTab("Khách Hàng", new KhachHangPanel());
-                AddTab("Nhập Hàng", new PhieuNhapPanel());
                 AddTab("Nhân Viên", new NhanVienPanel());
                 AddTab("Nhà Cung Cấp", new NhaCungCapPanel());
                 AddTab("Hợp Đồng", new HopDongPanel());
@@ -90,7 +115,6 @@ namespace QLThuocApp.UI
                 AddTab("Bán Hàng", new HoaDonPanel());
                 AddTab("Thuốc", new ThuocControl());
                 AddTab("Khách Hàng", new KhachHangPanel());
-                AddTab("Nhập Hàng", new PhieuNhapPanel());
                 AddTab("Nhà Cung Cấp", new NhaCungCapPanel());
                 AddTab("Hợp Đồng", new HopDongPanel());
                 AddTab("Phản Hồi", new PhanHoiPanel());

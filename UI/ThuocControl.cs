@@ -21,7 +21,32 @@ namespace QLThuocApp.UI
             BackColor = Color.White;
             Padding = new Padding(10);
             InitializeUI();
+            ApplyRolePermissions();
             LoadData();
+        }
+
+        private void ApplyRolePermissions()
+        {
+            var roleId = LoginForm.CurrentUser?.IdVT;
+            
+            // Chỉ Admin (1) và Manager (2) mới có quyền thêm/sửa/xóa/import
+            if (roleId == "3") // Nhân viên
+            {
+                btnAdd.Visible = false;
+                btnEdit.Visible = false;
+                btnDelete.Visible = false;
+                btnImport.Visible = false;
+                
+                // Disable input fields
+                txtMa.Enabled = false;
+                txtTen.Enabled = false;
+                txtDonViTinh.Enabled = false;
+                nudGiaNhap.Enabled = false;
+                nudDonGia.Enabled = false;
+                nudSoLuong.Enabled = false;
+                txtXuatXu.Enabled = false;
+                dtpHanSuDung.Enabled = false;
+            }
         }
 
         private void InitializeUI()

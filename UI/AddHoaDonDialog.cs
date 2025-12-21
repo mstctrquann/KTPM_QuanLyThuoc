@@ -181,11 +181,49 @@ namespace QLThuocApp.UI
             var selectedThuoc = cboThuoc.SelectedItem as Thuoc;
             if (selectedThuoc == null) return;
 
+            int soLuongMua = (int)nudSoLuong.Value;
+            
+            // Kiểm tra tồn kho
+            if (selectedThuoc.SoLuongTon < soLuongMua)
+            {
+                MessageBox.Show(
+                    $"⚠ Không đủ hàng trong kho!\n\n" +
+                    $"Thuốc: {selectedThuoc.TenThuoc}\n" +
+                    $"Số lượng tồn: {selectedThuoc.SoLuongTon}\n" +
+                    $"Số lượng muốn mua: {soLuongMua}\n\n" +
+                    $"Vui lòng nhập số lượng nhỏ hơn hoặc bằng {selectedThuoc.SoLuongTon}",
+                    "Không đủ hàng",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
+            // Kiểm tra tổng số lượng trong giỏ hàng
+            var existingItem = cart.FirstOrDefault(x => x.IdThuoc == selectedThuoc.IdThuoc);
+            int tongSoLuongTrongGio = existingItem != null ? existingItem.SoLuong : 0;
+            
+            if (tongSoLuongTrongGio + soLuongMua > selectedThuoc.SoLuongTon)
+            {
+                MessageBox.Show(
+                    $"⚠ Vượt quá số lượng tồn kho!\n\n" +
+                    $"Thuốc: {selectedThuoc.TenThuoc}\n" +
+                    $"Đã có trong giỏ: {tongSoLuongTrongGio}\n" +
+                    $"Muốn thêm: {soLuongMua}\n" +
+                    $"Tồn kho: {selectedThuoc.SoLuongTon}\n\n" +
+                    $"Chỉ có thể thêm tối đa {selectedThuoc.SoLuongTon - tongSoLuongTrongGio} sản phẩm nữa",
+                    "Vượt quá tồn kho",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
             var ct = new ChiTietHoaDon
             {
                 IdThuoc = selectedThuoc.IdThuoc,
                 TenThuoc = selectedThuoc.TenThuoc,
-                SoLuong = (int)nudSoLuong.Value,
+                SoLuong = soLuongMua,
                 DonGia = selectedThuoc.DonGia
             };
             cart.Add(ct);

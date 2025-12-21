@@ -112,6 +112,32 @@ namespace QLThuocApp.dao
             return GetAll();
         }
 
+        public HopDong? GetHopDongById(string idHD)
+        {
+            string sql = @"SELECT hd.*, nv.ma_nhan_vien, ncc.ma_nha_cung_cap 
+                           FROM hopdong hd
+                           LEFT JOIN nhanvien nv ON hd.nhan_vien_id = nv.id
+                           LEFT JOIN nhacungcap ncc ON hd.nha_cung_cap_id = ncc.id
+                           WHERE hd.ma_hop_dong = @ma";
+
+            using (var conn = DBConnection.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@ma", idHD);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return MapData(reader);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         public List<HopDong> SearchHopDong(string id, string idNV, string idNCC)
         {
             List<HopDong> list = new List<HopDong>();
