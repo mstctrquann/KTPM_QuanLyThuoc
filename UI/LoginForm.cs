@@ -151,7 +151,7 @@ namespace QLThuocApp.UI
             // Load ảnh QR từ Resources
             string qrPath = @"C:\Users\PC\Downloads\KTPM-master\Resources\qr_feedback.jpg";
             
-            // Nếu không tìm thấy ở đường dẫn tuyệt đối, thử đường dẫn tương đối
+            
             if (!File.Exists(qrPath))
             {
                 qrPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "qr_feedback.jpg");

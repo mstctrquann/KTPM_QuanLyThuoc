@@ -120,35 +120,66 @@ namespace QLThuocApp.UI
 
         private void ActionRestore()
         {
-            if (dgv.CurrentRow == null) return;
-            string id = dgv.CurrentRow.Cells["IdThuoc"].Value.ToString();
-            
-            if (controller.Restore(id))
+            if (dgv.CurrentRow == null) 
             {
-                MessageBox.Show("Đã khôi phục thuốc thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadData();
+                MessageBox.Show("Vui lòng chọn thuốc cần khôi phục!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else
+            
+            string id = dgv.CurrentRow.Cells["IdThuoc"].Value.ToString();
+            string tenThuoc = dgv.CurrentRow.Cells["TenThuoc"].Value.ToString();
+            
+            var confirmMsg = $"📦 KHÔI PHỤC THUỐC\n\n" +
+                           $"Mã: {id}\n" +
+                           $"Tên: {tenThuoc}\n\n" +
+                           $"Thuốc sẽ được đưa trở lại tab Thuốc và\n" +
+                           $"có thể sử dụng cho đơn hàng mới.\n\n" +
+                           $"Bạn có chắc chắn muốn khôi phục?";
+            
+            if (MessageBox.Show(confirmMsg, "Xác nhận khôi phục", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                MessageBox.Show("Khôi phục thất bại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (controller.Restore(id, out string msg))
+                {
+                    MessageBox.Show($"✓ {msg}\n\nThuốc '{tenThuoc}' đã được khôi phục!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadData();
+                }
+                else
+                {
+                    MessageBox.Show($"Khôi phục thất bại:\n{msg}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
         private void ActionDeleteForever()
         {
-            if (dgv.CurrentRow == null) return;
-            string id = dgv.CurrentRow.Cells["IdThuoc"].Value.ToString();
-            
-            if(MessageBox.Show($"Xóa vĩnh viễn thuốc {id}? Hành động này không thể hoàn tác!", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (dgv.CurrentRow == null) 
             {
-                if (controller.DeleteForever(id))
+                MessageBox.Show("Vui lòng chọn thuốc cần xóa vĩnh viễn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            string id = dgv.CurrentRow.Cells["IdThuoc"].Value.ToString();
+            string tenThuoc = dgv.CurrentRow.Cells["TenThuoc"].Value.ToString();
+            
+            var confirmMsg = $"⚠️ CẢNH BÁO: XÓA VĨnh VIỄN!\n\n" +
+                           $"Mã: {id}\n" +
+                           $"Tên: {tenThuoc}\n\n" +
+                           $"❌ HÀNH ĐỘNG NÀY KHÔNG THỂ HOÀN TÁC!\n\n" +
+                           $"Thuốc sẽ bị xóa hoàn toàn khỏi hệ thống.\n" +
+                           $"Nếu thuốc đã được sử dụng trong hóa đơn/phiếu nhập,\n" +
+                           $"việc xóa sẽ thất bại để bảo toàn dữ liệu.\n\n" +
+                           $"Bạn có CHẮC CHẮN muốn xóa vĩnh viễn?";
+            
+            if(MessageBox.Show(confirmMsg, "⚠️ Cảnh báo nghiêm trọng", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                if (controller.DeleteForever(id, out string msg))
                 {
-                    MessageBox.Show("Đã xóa vĩnh viễn.", "Thông báo");
+                    MessageBox.Show($"✓ {msg}\n\nThuốc '{tenThuoc}' đã bị xóa vĩnh viễn!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LoadData();
                 }
                 else
                 {
-                    MessageBox.Show("Xóa thất bại.", "Lỗi");
+                    MessageBox.Show($"❌ Xóa vĩnh viễn thất bại!\n\n{msg}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

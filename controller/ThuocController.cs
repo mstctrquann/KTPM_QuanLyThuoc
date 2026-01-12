@@ -39,30 +39,73 @@ namespace QLThuocApp.Controllers
             catch (System.Exception ex) { msg = ex.Message; return false; }
         }
 
+        // Soft delete: Đánh dấu ngừng kinh doanh
         public bool Delete(string id, out string msg)
         {
             msg = "";
             try 
             {
-                if (dao.Delete(id)) return true;
-                msg = "Xóa thất bại (Thuốc đang được sử dụng?)"; return false;
+                if (dao.Delete(id)) 
+                {
+                    msg = "Thuốc đã được chuyển vào thùng rác (Đã ngừng kinh doanh)";
+                    return true;
+                }
+                msg = "Ngừng kinh doanh thất bại"; 
+                return false;
             }
             catch (System.Exception ex) { msg = ex.Message; return false; }
         }
+        
         // --- PHẦN BỔ SUNG CHO THÙNG RÁC ---
         public List<Thuoc> GetDeletedList()
         {
             return dao.GetDeleted();
         }
 
-        public bool Restore(string id)
+        public bool Restore(string id, out string msg)
         {
-            return dao.Restore(id);
+            msg = "";
+            try
+            {
+                if (dao.Restore(id)) 
+                {
+                    msg = "Khôi phục thành công";
+                    return true;
+                }
+                msg = "Khôi phục thất bại";
+                return false;
+            }
+            catch (System.Exception ex) { msg = ex.Message; return false; }
         }
 
-        public bool DeleteForever(string id)
+        public bool DeleteForever(string id, out string msg)
         {
-            return dao.DeleteForever(id);
+            msg = "";
+            try
+            {
+                if (dao.DeleteForever(id)) 
+                {
+                    msg = "Đã xóa vĩnh viễn";
+                    return true;
+                }
+                msg = "Xóa vĩnh viễn thất bại (Thuốc đang được sử dụng trong hóa đơn/phiếu nhập)";
+                return false;
+            }
+            catch (System.Exception ex) 
+            { 
+                if (ex.Message.Contains("foreign key") || ex.Message.Contains("FOREIGN KEY"))
+                {
+                    msg = "Không thể xóa vĩnh viễn! Thuốc này đã được sử dụng trong hóa đơn hoặc phiếu nhập.";
+                }
+                else
+                {
+                    msg = ex.Message;
+                }
+                return false; 
+            }
         }
+        
+        // Lấy tất cả thuốc bao gồm cả đã ngừng kinh doanh
+        public List<Thuoc> GetAllIncludeDeleted() => dao.GetAllIncludeDeleted();
     }
 }

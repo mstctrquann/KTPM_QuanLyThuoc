@@ -23,7 +23,8 @@ namespace QLThuocApp.dao
                 SoLuongTon = Convert.ToInt32(reader["so_luong_ton"]),
                 GiaNhap = Convert.ToDouble(reader["gia_nhap"]),
                 DonGia = Convert.ToDouble(reader["don_gia"]),
-                HanSuDung = Convert.ToDateTime(reader["han_su_dung"])
+                HanSuDung = Convert.ToDateTime(reader["han_su_dung"]),
+                TrangThai = reader["trang_thai"] != DBNull.Value ? Convert.ToInt32(reader["trang_thai"]) : 1
             };
         }
 
@@ -31,10 +32,33 @@ namespace QLThuocApp.dao
         {
             var list = new List<Thuoc>();
             // Join với danhmuc để lấy tên danh mục hiển thị lên Grid
+            // Chỉ lấy thuốc đang kinh doanh (trang_thai = 1)
             string sql = @"SELECT t.*, d.ten_danh_muc 
                            FROM thuoc t 
                            LEFT JOIN danhmuc d ON t.danh_muc_id = d.id 
+                           WHERE t.trang_thai = 1
                            ORDER BY t.ten_thuoc ASC";
+
+            using (var conn = DBConnection.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(sql, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read()) list.Add(MapData(reader));
+                }
+            }
+            return list;
+        }
+        
+        // Lấy tất cả thuốc bao gồm cả đã ngừng kinh doanh (dùng cho báo cáo, lịch sử)
+        public List<Thuoc> GetAllIncludeDeleted()
+        {
+            var list = new List<Thuoc>();
+            string sql = @"SELECT t.*, d.ten_danh_muc 
+                           FROM thuoc t 
+                           LEFT JOIN danhmuc d ON t.danh_muc_id = d.id 
+                           ORDER BY t.trang_thai DESC, t.ten_thuoc ASC";
 
             using (var conn = DBConnection.GetConnection())
             {
@@ -53,9 +77,9 @@ namespace QLThuocApp.dao
         // Theo DB hiện tại: thuoc có danh_muc_id.
         public bool Insert(Thuoc t)
         {
-            string sql = @"INSERT INTO thuoc (ma_thuoc, ten_thuoc, thanh_phan, don_vi_tinh, xuat_xu, so_luong_ton, gia_nhap, don_gia, han_su_dung, danh_muc_id) 
+            string sql = @"INSERT INTO thuoc (ma_thuoc, ten_thuoc, thanh_phan, don_vi_tinh, xuat_xu, so_luong_ton, gia_nhap, don_gia, han_su_dung, danh_muc_id, trang_thai) 
                            VALUES (@ma, @ten, @tp, @dvt, @xx, @sl, @gn, @dg, @hsd, 
-                                   (SELECT id FROM danhmuc WHERE ten_danh_muc = @dm LIMIT 1))"; // Lookup ID danh mục từ tên
+                                   (SELECT id FROM danhmuc WHERE ten_danh_muc = @dm LIMIT 1), 1)"; // Lookup ID danh mục từ tên, trang_thai = 1 (đang kinh doanh)
 
             using (var conn = DBConnection.GetConnection())
             {
@@ -104,7 +128,23 @@ namespace QLThuocApp.dao
             }
         }
 
+        // Soft delete: Đánh dấu thuốc đã ngừng kinh doanh (trang_thai = 0)
         public bool Delete(string maThuoc)
+        {
+            string sql = "UPDATE thuoc SET trang_thai = 0 WHERE ma_thuoc = @ma";
+            using (var conn = DBConnection.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@ma", maThuoc);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+        
+        // Hard delete: Xóa vĩnh viễn khỏi database (dùng trong thùng rác)
+        public bool DeletePermanently(string maThuoc)
         {
             string sql = "DELETE FROM thuoc WHERE ma_thuoc = @ma";
             using (var conn = DBConnection.GetConnection())
@@ -124,7 +164,8 @@ namespace QLThuocApp.dao
             string sql = @"SELECT t.*, d.ten_danh_muc 
                            FROM thuoc t 
                            LEFT JOIN danhmuc d ON t.danh_muc_id = d.id 
-                           WHERE t.ma_thuoc LIKE @key OR t.ten_thuoc LIKE @key";
+                           WHERE (t.ma_thuoc LIKE @key OR t.ten_thuoc LIKE @key)
+                           AND t.trang_thai = 1";
             
             using (var conn = DBConnection.GetConnection())
             {
@@ -141,22 +182,47 @@ namespace QLThuocApp.dao
             return list;
         }
 
+        // Lấy danh sách thuốc đã ngừng kinh doanh (thùng rác)
         public List<Thuoc> GetDeleted()
         {
-            // Thuoc không có soft-delete trong DB hiện tại, trả về list rỗng
-            return new List<Thuoc>();
+            var list = new List<Thuoc>();
+            string sql = @"SELECT t.*, d.ten_danh_muc 
+                           FROM thuoc t 
+                           LEFT JOIN danhmuc d ON t.danh_muc_id = d.id 
+                           WHERE t.trang_thai = 0
+                           ORDER BY t.ten_thuoc ASC";
+
+            using (var conn = DBConnection.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(sql, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read()) list.Add(MapData(reader));
+                }
+            }
+            return list;
         }
 
+        // Khôi phục thuốc (đưa về trạng thái đang kinh doanh)
         public bool Restore(string maThuoc)
         {
-            // Không có cột deleted_at, không thể restore
-            return false;
+            string sql = "UPDATE thuoc SET trang_thai = 1 WHERE ma_thuoc = @ma";
+            using (var conn = DBConnection.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@ma", maThuoc);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
         }
 
+        // Xóa vĩnh viễn (gọi DeletePermanently)
         public bool DeleteForever(string maThuoc)
         {
-            // Gọi Delete để xóa vĩnh viễn (do không có soft-delete)
-            return Delete(maThuoc);
+            return DeletePermanently(maThuoc);
         }
     }
 }

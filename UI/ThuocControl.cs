@@ -264,50 +264,33 @@ namespace QLThuocApp.UI
         {
             if (string.IsNullOrWhiteSpace(txtMa.Text))
             {
-                MessageBox.Show("Vui lòng nhập mã hoặc tên thuốc để tìm và xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn thuốc cần ngừng kinh doanh!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Hiển thị thông tin trước khi xóa
-            var confirmMsg = $"⚠ BẠN CHẮC CHẮN MUỐN XÓA THUỐC NÀY?\n\n" +
+            // Hiển thị thông tin trước khi đánh dấu ngừng kinh doanh
+            var confirmMsg = $"⚠ BẠN CHẮC CHẮN MUỐN NGỪNG KINH DOANH THUỐC NÀY?\n\n" +
                            $"Mã: {txtMa.Text}\n" +
                            $"Tên: {txtTen.Text}\n" +
                            $"Giá bán: {nudDonGia.Value:N0} VNĐ\n" +
                            $"Số lượng tồn: {nudSoLuong.Value}\n\n" +
-                           $"Lưu ý: Nếu thuốc đã được bán hoặc nhập kho,\n" +
-                           $"hệ thống sẽ chuyển sang trạng thái 'Đã xóa'\n" +
-                           $"thay vì xóa vĩnh viễn (để bảo toàn dữ liệu lịch sử).";
+                           $"📌 LƯU Ý:\n" +
+                           $"• Thuốc sẽ được chuyển vào Thùng rác\n" +
+                           $"• Các hóa đơn đã bán vẫn giữ thông tin thuốc này\n" +
+                           $"• Không thể chọn thuốc này cho đơn hàng mới\n" +
+                           $"• Có thể khôi phục lại từ Thùng rác";
 
-            if (MessageBox.Show(confirmMsg, "⚠ Cảnh báo - Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show(confirmMsg, "⚠ Xác nhận ngừng kinh doanh", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 if (controller.Delete(txtMa.Text, out string msg)) 
                 {
                     LoadData();
                     ClearInputs();
-                    MessageBox.Show("✓ Xóa thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"✓ {msg}\n\nThuốc đã được chuyển vào Thùng rác.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    // Hiển thị lỗi chi tiết hơn
-                    if (msg.Contains("foreign key") || msg.Contains("FOREIGN KEY") || msg.Contains("CONSTRAINT"))
-                    {
-                        MessageBox.Show(
-                            "❌ KHÔNG THỂ XÓA THUỐC NÀY!\n\n" +
-                            "Lý do: Thuốc này đã được sử dụng trong:\n" +
-                            "• Hóa đơn bán hàng, hoặc\n" +
-                            "• Phiếu nhập kho\n\n" +
-                            "Giải pháp:\n" +
-                            "1. Kiểm tra lại các hóa đơn/phiếu nhập có chứa thuốc này\n" +
-                            "2. Hoặc đánh dấu 'Ngừng kinh doanh' thay vì xóa\n\n" +
-                            "Chi tiết kỹ thuật: " + msg,
-                            "Lỗi ràng buộc dữ liệu",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Lỗi: {msg}", "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    MessageBox.Show($"Lỗi: {msg}", "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

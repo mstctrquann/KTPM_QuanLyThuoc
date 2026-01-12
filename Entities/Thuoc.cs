@@ -48,11 +48,16 @@ namespace QLThuocApp.Entities
         [Column("han_su_dung")]
         public DateTime HanSuDung { get; set; }
 
-        [NotMapped] // Cột này dùng cho logic xóa mềm trên UI nếu cần
-        public bool IsDeleted { get; set; }
+        // Trạng thái: 1 = Đang kinh doanh, 0 = Đã ngừng kinh doanh
+        [Column("trang_thai")]
+        public int TrangThai { get; set; } = 1;
         
         // Cột ID thực trong DB (nếu cần dùng nội bộ)
         [Column("id")]
         public int Id { get; set; }
+        
+        // Thuộc tính hiển thị trạng thái
+        [NotMapped]
+        public string TenTrangThai => TrangThai == 1 ? "Đang kinh doanh" : "Đã ngừng kinh doanh";
     }
 }
