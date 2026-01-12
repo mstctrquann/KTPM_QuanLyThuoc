@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QLThuocApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e193734d4c2e1cb0fe4d4791c2fc53a2176e6ad")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f8172f97c15694528c8663ff3a079c075e2d3a4")]
 [assembly: System.Reflection.AssemblyProductAttribute("QLThuocApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QLThuocApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

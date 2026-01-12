@@ -10,6 +10,22 @@ namespace QLThuocApp.dao
     {
         private NhanVien MapData(MySqlDataReader reader)
         {
+            string roleId = "";
+            try
+            {
+                // Kiểm tra nếu có cột role_id
+                int roleIdIndex = reader.GetOrdinal("role_id");
+                if (reader["role_id"] != DBNull.Value)
+                {
+                    roleId = reader["role_id"].ToString();
+                }
+            }
+            catch
+            {
+                // Nếu không có cột role_id, để rỗng
+                roleId = "";
+            }
+            
             return new NhanVien
             {
                 IdNV = reader["ma_nhan_vien"].ToString(),
@@ -20,14 +36,17 @@ namespace QLThuocApp.dao
                 NgayVaoLam = Convert.ToDateTime(reader["ngay_vao_lam"]),
                 Luong = reader["luong"] != DBNull.Value ? reader["luong"].ToString() : "0",
                 TrangThai = reader["trang_thai"].ToString(),
-                RoleId = "" // RoleId chỉ có khi JOIN với taikhoan, mặc định rỗng
+                RoleId = roleId
             };
         }
 
         public List<NhanVien> GetAll()
         {
             List<NhanVien> list = new List<NhanVien>();
-            string sql = "SELECT * FROM nhanvien WHERE is_deleted = 0 OR is_deleted IS NULL";
+            string sql = @"SELECT nv.*, tk.role_id 
+                           FROM nhanvien nv
+                           LEFT JOIN taikhoan tk ON nv.id = tk.nhan_vien_id
+                           WHERE nv.is_deleted = 0 OR nv.is_deleted IS NULL";
             using (MySqlConnection conn = DBConnection.GetConnection())
             {
                 conn.Open();

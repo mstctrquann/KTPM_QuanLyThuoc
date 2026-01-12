@@ -222,7 +222,7 @@ namespace QLThuocApp.UI
 
         private void LoadData()
         {
-            // Load nhân viên (chỉ Admin và Manager)
+            // Load nhân viên (chỉ Admin và Manager - role_id 1 và 2)
             var allNhanVien = nvController.GetAllNhanVien();
             var adminManagers = allNhanVien.Where(nv => 
                 nv.TrangThai == "DangLamViec" && 
@@ -232,6 +232,12 @@ namespace QLThuocApp.UI
             cboNhanVien.DataSource = adminManagers;
             cboNhanVien.DisplayMember = "HoTen";
             cboNhanVien.ValueMember = "IdNV";
+            
+            // Nếu có nhân viên, chọn người đầu tiên
+            if (adminManagers.Count > 0)
+            {
+                cboNhanVien.SelectedIndex = 0;
+            }
 
             // Load nhà cung cấp
             LoadNhaCungCap();
