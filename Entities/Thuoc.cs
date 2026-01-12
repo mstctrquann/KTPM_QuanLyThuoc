@@ -52,7 +52,7 @@ namespace QLThuocApp.Entities
         [Column("trang_thai")]
         public int TrangThai { get; set; } = 1;
         
-        // Cột ID thực trong DB (nếu cần dùng nội bộ)
+        // Cột ID thực trong DB
         [Column("id")]
         public int Id { get; set; }
         
